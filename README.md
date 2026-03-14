@@ -192,3 +192,7 @@ PROXY_ADMIN_PASSWORD = "your-password"
 ## License
 
 MIT
+
+## 免责声明
+
+本项目仅供个人学习和研究使用，不得用于商业用途。使用本工具产生的一切后果由使用者自行承担，与项目作者无关。请遵守 Tavily 的服务条款和相关法律法规，合理使用 API 资源。
