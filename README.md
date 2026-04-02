@@ -1,5 +1,7 @@
 # Tavily Key Generator + API Proxy
 
+**Forked repository. Upstream does not provide an explicit open source license.**
+
 批量注册 Tavily 账户获取 API Key，并通过代理网关池化管理，对外提供统一 API 端点。
 
 ## 功能概览
