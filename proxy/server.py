@@ -3,6 +3,7 @@ Tavily API Proxy — FastAPI 主服务
 """
 import os
 import time
+import secrets
 import httpx
 from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -11,8 +12,9 @@ from fastapi.templating import Jinja2Templates
 import database as db
 from key_pool import pool
 
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "").strip()
 TAVILY_API_BASE = "https://api.tavily.com"
+WEAK_PASSWORDS = {"", "admin", "change-me", "your-password", "changeme"}
 
 app = FastAPI(title="Tavily API Proxy")
 templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
@@ -20,7 +22,12 @@ http_client = httpx.AsyncClient(timeout=60)
 
 
 def get_admin_password():
-    return db.get_setting("admin_password", ADMIN_PASSWORD)
+    return (db.get_setting("admin_password", "") or ADMIN_PASSWORD).strip()
+
+
+def is_loopback_request(request: Request):
+    client = request.client.host if request.client else ""
+    return client in {"127.0.0.1", "::1", "localhost"}
 
 
 # ═══ Auth helpers ═══
@@ -29,7 +36,11 @@ def verify_admin(request: Request):
     auth = request.headers.get("Authorization", "")
     password = request.headers.get("X-Admin-Password", "")
     pwd = get_admin_password()
-    if auth == f"Bearer {pwd}" or password == pwd:
+    if not pwd:
+        raise HTTPException(status_code=503, detail="Admin password is not configured")
+    if not is_loopback_request(request) and (pwd.lower() in WEAK_PASSWORDS or len(pwd) < 12):
+        raise HTTPException(status_code=403, detail="Weak admin password is not allowed for non-local access")
+    if secrets.compare_digest(auth, f"Bearer {pwd}") or secrets.compare_digest(password, pwd):
         return True
     raise HTTPException(status_code=401, detail="Unauthorized")
 
@@ -193,7 +204,7 @@ async def remove_token(token_id: int, _=Depends(verify_admin)):
 async def change_password(request: Request, _=Depends(verify_admin)):
     body = await request.json()
     new_pwd = body.get("password", "").strip()
-    if not new_pwd or len(new_pwd) < 4:
-        raise HTTPException(status_code=400, detail="Password too short (min 4)")
+    if not new_pwd or len(new_pwd) < 12:
+        raise HTTPException(status_code=400, detail="Password too short (min 12)")
     db.set_setting("admin_password", new_pwd)
     return {"ok": True}
