@@ -2,6 +2,7 @@
 工具函数
 """
 import time
+from urllib.parse import urlparse
 from datetime import datetime
 from config import API_KEYS_FILE
 
@@ -9,7 +10,7 @@ from config import API_KEYS_FILE
 def save_api_key(email, api_key, password=None):
     """保存API key和账户信息到文件，并自动上传到 Proxy"""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    account_line = f"{email},{password if password else 'N/A'},{api_key},{timestamp};\n"
+    account_line = f"{email},REDACTED,{api_key},{timestamp};\n"
 
     try:
         with open(API_KEYS_FILE, 'a', encoding='utf-8') as f:
@@ -20,8 +21,8 @@ def save_api_key(email, api_key, password=None):
 
     print(f"✅ 账户信息已保存到 {API_KEYS_FILE}")
     print(f"📧 邮箱: {email}")
-    print(f"🔐 密码: {password if password else 'N/A'}")
-    print(f"🔑 API Key: {api_key}")
+    print("🔐 密码未写入磁盘")
+    print(f"🔑 API Key: {mask_secret(api_key)}")
     print(f"⏰ 时间: {timestamp}")
 
     # 自动上传到 Proxy
@@ -36,6 +37,12 @@ def upload_to_proxy(api_key, email=""):
         return
 
     if not PROXY_AUTO_UPLOAD or not PROXY_URL:
+        return
+    if not PROXY_ADMIN_PASSWORD:
+        print("⚠️ 未设置 PROXY_ADMIN_PASSWORD，跳过自动上传")
+        return
+    if not is_safe_proxy_url(PROXY_URL):
+        print(f"⚠️ Proxy 地址不安全，拒绝发送管理密码: {PROXY_URL}")
         return
 
     import urllib.request
@@ -55,6 +62,21 @@ def upload_to_proxy(api_key, email=""):
                 print(f"⚠️ Proxy 上传失败: HTTP {resp.status}")
     except Exception as e:
         print(f"⚠️ Proxy 上传失败: {e}")
+
+
+def mask_secret(secret):
+    if not secret:
+        return "N/A"
+    if len(secret) <= 12:
+        return "*" * len(secret)
+    return f"{secret[:8]}...{secret[-4:]}"
+
+
+def is_safe_proxy_url(url):
+    parsed = urlparse(url)
+    if parsed.scheme == "https":
+        return True
+    return parsed.scheme == "http" and parsed.hostname in {"127.0.0.1", "localhost"}
 
 
 def wait_with_message(seconds, message="等待中"):

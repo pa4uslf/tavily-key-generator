@@ -41,7 +41,7 @@
 ```bash
 cd proxy/
 cp .env.example .env
-# 编辑 .env 中的 ADMIN_PASSWORD
+# 编辑 .env 中的 ADMIN_PASSWORD（请使用至少 12 位强口令）
 docker compose up -d
 ```
 
@@ -164,7 +164,7 @@ DUCKMAIL_DOMAIN = "duckmail.sbs"
 ```python
 PROXY_AUTO_UPLOAD = True
 PROXY_URL = "http://your-server:9874"
-PROXY_ADMIN_PASSWORD = "your-password"
+PROXY_ADMIN_PASSWORD = "your-strong-admin-password"
 ```
 
 ---

@@ -20,7 +20,7 @@ cd proxy/
 
 # 修改管理密码
 cp .env.example .env
-# 编辑 .env 中的 ADMIN_PASSWORD
+# 编辑 .env 中的 ADMIN_PASSWORD（请使用至少 12 位强口令）
 
 # 启动
 docker compose up -d
@@ -33,7 +33,7 @@ docker compose up -d
 ```bash
 cd proxy/
 pip install -r requirements.txt
-ADMIN_PASSWORD=your-password uvicorn server:app --host 0.0.0.0 --port 9874
+ADMIN_PASSWORD=your-strong-password uvicorn server:app --host 127.0.0.1 --port 9874
 ```
 
 ## 使用流程
@@ -89,7 +89,7 @@ curl -X POST http://localhost:9874/api/search \
 
 | 环境变量 | 默认值 | 说明 |
 |----------|--------|------|
-| `ADMIN_PASSWORD` | `admin` | 管理控制台和管理 API 的密码 |
+| `ADMIN_PASSWORD` | 无默认值 | 管理控制台和管理 API 的密码，建议至少 12 位 |
 
 ## Token 配额
 

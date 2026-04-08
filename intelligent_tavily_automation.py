@@ -5,6 +5,8 @@
 """
 import time
 import re
+import secrets
+import string
 from playwright.sync_api import sync_playwright
 from config import *
 from utils import save_api_key
@@ -17,7 +19,7 @@ class IntelligentTavilyAutomation:
         self.browser = None
         self.page = None
         self.email = None
-        self.password = DEFAULT_PASSWORD
+        self.password = self._resolve_password()
         self.debug = True
         self.email_prefix = None  # 动态邮箱前缀
         self.headless_mode = None  # 记住headless设置
@@ -78,6 +80,13 @@ class IntelligentTavilyAutomation:
                 ]
             }
         }
+
+    def _resolve_password(self):
+        configured = str(DEFAULT_PASSWORD).strip() if DEFAULT_PASSWORD is not None else ""
+        if configured:
+            return configured
+        alphabet = string.ascii_letters + string.digits + "!@#$%^&*()-_=+"
+        return "".join(secrets.choice(alphabet) for _ in range(24))
     
     def log(self, message, level="INFO"):
         """调试日志"""
@@ -439,8 +448,8 @@ class IntelligentTavilyAutomation:
             if api_key:
                 self.log(f"🎉 完整自动化流程成功完成!")
                 self.log(f"📧 注册邮箱: {self.email}")
-                self.log(f"🔐 密码: {self.password}")
-                self.log(f"🔑 API Key: {api_key}")
+                self.log("🔐 密码已生成并仅在本地会话内使用")
+                self.log(f"🔑 API Key: {api_key[:8]}...{api_key[-4:]}")
 
                 # 保存API key
                 save_api_key(self.email, api_key, self.password)
@@ -489,7 +498,7 @@ class IntelligentTavilyAutomation:
             api_key = self.get_api_key()
 
             if api_key:
-                self.log(f"🎉 成功获取 API key: {api_key}")
+                self.log(f"🎉 成功获取 API key: {api_key[:8]}...{api_key[-4:]}")
                 # 清理邮件
                 self.provider.cleanup(self.email)
                 return api_key

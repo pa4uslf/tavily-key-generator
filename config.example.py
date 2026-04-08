@@ -25,7 +25,7 @@ CAPTCHA_SOLVER = "browser"
 CAPSOLVER_API_KEY = ""      # 从 capsolver.com 获取
 
 # ═══ 注册配置 ═══
-DEFAULT_PASSWORD = "TavilyAuto123!"
+DEFAULT_PASSWORD = ""        # 留空时每次自动生成强随机密码
 API_KEYS_FILE = "api_keys.md"
 
 # ═══ 等待时间（秒） ═══
